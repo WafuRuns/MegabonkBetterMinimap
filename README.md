@@ -11,6 +11,7 @@ A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap,
 -   Install [BepInEx 6 Bleeding Edge IL2CPP](https://builds.bepinex.dev/projects/bepinex_be) for your game (tested on BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.738+af0cba7)
 -   Download the [latest release of MegabonkBetterMinimap](https://github.com/WafuRuns/MegabonkBetterMinimap/releases/download/1.0.0/MegabonkBetterMinimap.dll)
 -   Paste MegabonkBetterMinimap.dll into Megabonk\BepInEx\plugins folder
+-   **I strongly recommend going into the game settings and setting "Upload score to Leaderboards" to Off.** This mod is an accessibility and comfort feature, not something to give you an unintended advantage in competition. Feel free to consult the game dev.
 
 # Controls
 
