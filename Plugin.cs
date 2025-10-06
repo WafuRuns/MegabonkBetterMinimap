@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Assets.Scripts.Camera;
 using Assets.Scripts.Inventory__Items__Pickups.Chests;
@@ -243,6 +244,34 @@ public class Plugin : BasePlugin
         }
     }
 
+    [HarmonyPatch(typeof(InteractableShadyGuy), "Start")]
+    class InteractableShadyGuy_Start_Patch {
+        static void Postfix(InteractableShadyGuy __instance) {
+            var icon = __instance.hideAfterPurchase.FirstOrDefault().transform;
+            if (icon == null) return;
+            switch (__instance.rarity) {
+                case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Common:
+                    ChangeMinimapIcon(icon, "ShadyGuy");
+                    Log.LogInfo("Replaced vendor icon");
+                    break;
+                case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Rare:
+                    ChangeMinimapIcon(icon, "ShadyGuyRare");
+                    Log.LogInfo("Replaced rare vendor icon");
+                    break;
+                case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Epic:
+                    ChangeMinimapIcon(icon, "ShadyGuyEpic");
+                    Log.LogInfo("Replaced epic vendor icon");
+                    break;
+                case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Legendary:
+                    ChangeMinimapIcon(icon, "ShadyGuyLegendary");
+                    Log.LogInfo("Replaced legendary vendor icon");
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(BaseInteractable), "Start")]
     public static class BaseInteractableStartPatch {
         static void Postfix(BaseInteractable __instance) {
@@ -266,30 +295,6 @@ public class Plugin : BasePlugin
                 if (obj != null) {
                     ChangeMinimapIcon(obj.minimapIcon.transform, "Moai");
                     Log.LogInfo("Replaced moai shrine icon");
-                }
-            }
-            if (typeName == "InteractableShadyGuy") {
-                var obj = __instance.GetComponent<InteractableShadyGuy>();
-                if (obj == null) return;
-                switch (obj.rarity) {
-                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Common:
-                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuy");
-                        Log.LogInfo("Replaced vendor icon!");
-                        break;
-                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Rare:
-                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuyRare");
-                        Log.LogInfo("Replaced rare vendor icon");
-                        break;
-                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Epic:
-                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuyEpic");
-                        Log.LogInfo("Replaced epic vendor icon");
-                        break;
-                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Legendary:
-                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuyLegendary");
-                        Log.LogInfo("Replaced legendary vendor icon");
-                        break;
-                    default:
-                        break;
                 }
             }
         }
