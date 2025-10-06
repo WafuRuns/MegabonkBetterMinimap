@@ -323,6 +323,7 @@ public class Plugin : BasePlugin
 
         if (tex != null)
         {
+            meshRenderer.material.color = Color.white;
             meshRenderer.material.mainTexture = tex;
         }
     }
