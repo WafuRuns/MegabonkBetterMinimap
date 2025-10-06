@@ -35,5 +35,9 @@ A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap,
     -   Add icon for InteractableShadyGuy based on rarity
     -   Add icon for InteractableShrineMagnet
     -   Add icon for InteractableMicrowave
+
     -   ... more icons
     -   **Currently stuck here, only InteractableChest seemed to be easily modable, this is the first time I've touched BepInEx or Unity games in general, so I would love contributions**
+
+![32-1759753378-776589403](https://github.com/user-attachments/assets/2e797004-36e1-4c04-b7e9-6bf7079e0da5)
+![32-1759753379-1265661135](https://github.com/user-attachments/assets/1824be05-ca1b-4aec-9c31-04ea44284df5)
