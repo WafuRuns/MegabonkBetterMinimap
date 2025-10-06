@@ -192,31 +192,108 @@ public class Plugin : BasePlugin
         }
     }
 
-    // [HarmonyPatch(typeof(InteractableShadyGuy), "Start")]
-    // class InteractableShadyGuy_Start_Patch
-    // {
-    //     static void Postfix(InteractableShadyGuy __instance)
-    //     {
-    //         // We can get rarity to decided the minimap icon
-    //         // Can't get further to the minimap icon
-    //         // It just doesn't work the same as chests
+    [HarmonyPatch(typeof(ChargeShrine), "Start")]
+    class ChargeShrine_Start_Patch {
+        static void Postfix(ChargeShrine __instance) {
+            if (__instance.isGolden) {
+                ChangeMinimapIcon(__instance.minimapIcon.transform, "ShrineLegendary");
+                Log.LogInfo("Replaced legendary shrine icon");
+            } else {
+                ChangeMinimapIcon(__instance.minimapIcon.transform, "Shrine");
+                Log.LogInfo("Replaced shrine icon");
+            }
+        }
+    }
 
-    //         // Log.LogInfo(__instance.rarity);
-    //     }
-    // }
+    [HarmonyPatch(typeof(InteractableMicrowave), "Start")]
+    class InteractableMicrowave_Start_Patch {
+        static void Postfix(InteractableMicrowave __instance) {
+            if (__instance.usesLeft > 0) {
+                switch (__instance.rarity) {
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Common:
+                        ChangeMinimapIcon(__instance.minimapIcon.transform, "Microwave");
+                        Log.LogInfo("Replaced microwave icon");
+                        break;
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Rare:
+                        ChangeMinimapIcon(__instance.minimapIcon.transform, "MicrowaveRare");
+                        Log.LogInfo("Replaced rare microwave icon");
+                        break;
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Epic:
+                        ChangeMinimapIcon(__instance.minimapIcon.transform, "MicrowaveEpic");
+                        Log.LogInfo("Replaced epic microwave icon");
+                        break;
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Legendary:
+                        ChangeMinimapIcon(__instance.minimapIcon.transform, "MicrowaveLegendary");
+                        Log.LogInfo("Replaced legendary microwave icon");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
 
-    // [HarmonyPatch(typeof(BaseInteractable), "Start")]
-    // public static class BaseInteractableStartPatch
-    // {
-    //     static void Postfix(BaseInteractable __instance)
-    //     {
-    //         if (__instance.GetIl2CppType().Name == "InteractableShrineMoai")
-    //         {
-    //             // Theoretically every interactable could be found like this
-    //             // Can't get to the minimap icon
-    //         }
-    //     }
-    // }
+    [HarmonyPatch(typeof(InteractableShrineChallenge), "Awake")]
+    class InteractableShrineChallenge_Awake_Patch {
+        static void Postfix(InteractableShrineChallenge __instance) {
+            if (!__instance.done) {
+                ChangeMinimapIcon(__instance.minimapIcon.transform, "Challenge");
+                Log.LogInfo("Replaced challenge shrine icon");
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BaseInteractable), "Start")]
+    public static class BaseInteractableStartPatch {
+        static void Postfix(BaseInteractable __instance) {
+            var typeName = __instance.GetIl2CppType().Name;
+            if (typeName == "InteractableShrineCursed") {
+                var obj = __instance.GetComponent<InteractableShrineCursed>();
+                if (obj != null) {
+                    ChangeMinimapIcon(obj.minimapIcon.transform, "BossCurse");
+                    Log.LogInfo("Replaced boss curse shrine icon");
+                }
+            }
+            if (typeName == "InteractableShrineMagnet") {
+                var obj = __instance.GetComponent<InteractableShrineMagnet>();
+                if (obj != null) {
+                    ChangeMinimapIcon(obj.minimapIcon.transform, "Magnet");
+                    Log.LogInfo("Replaced magnet shrine icon");
+                }
+            }
+            if (typeName == "InteractableShrineMoai") {
+                var obj = __instance.GetComponent<InteractableShrineMoai>();
+                if (obj != null) {
+                    ChangeMinimapIcon(obj.minimapIcon.transform, "Moai");
+                    Log.LogInfo("Replaced moai shrine icon");
+                }
+            }
+            if (typeName == "InteractableShadyGuy") {
+                var obj = __instance.GetComponent<InteractableShadyGuy>();
+                if (obj == null) return;
+                switch (obj.rarity) {
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Common:
+                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuy");
+                        Log.LogInfo("Replaced vendor icon!");
+                        break;
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Rare:
+                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuyRare");
+                        Log.LogInfo("Replaced rare vendor icon");
+                        break;
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Epic:
+                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuyEpic");
+                        Log.LogInfo("Replaced epic vendor icon");
+                        break;
+                    case Assets.Scripts.Inventory__Items__Pickups.Items.EItemRarity.Legendary:
+                        ChangeMinimapIcon(obj.hideAfterPurchase.First().transform, "ShadyGuyLegendary");
+                        Log.LogInfo("Replaced legendary vendor icon");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
 
     public static bool IsKeyPressedOnce(int vKey)
     {
