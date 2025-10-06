@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>MegabonkBetterMinimap</AssemblyName>
+    <Product>Better minimap for Megabonk</Product>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json
+    </RestoreAdditionalProjectSources>
+    <RootNamespace>MegabonkBetterMinimap</RootNamespace>
+
+    <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Megabonk</GameDir>
+    <CoreDir>$(GameDir)\BepInEx\core</CoreDir>
+    <InteropDir>$(GameDir)\BepInEx\interop</InteropDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.*" IncludeAssets="compile" HintPath="$(CoreDir)\BepInEx.Unity.IL2CPP.dll" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <Reference Include="BepInEx.Core" HintPath="$(CoreDir)\BepInEx.Core.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp" HintPath="$(InteropDir)\Assembly-CSharp.dll" />
+    <Reference Include="Il2CppInterop.Runtime" HintPath="$(CoreDir)\Il2CppInterop.Runtime.dll" />
+    <Reference Include="Il2Cppmscorlib" HintPath="$(InteropDir)\Il2Cppmscorlib.dll" />
+    <Reference Include="Il2CppInterop.Common" HintPath="$(CoreDir)\Il2CppInterop.Common.dll" />
+    <Reference Include="Il2CppSystem" HintPath="$(InteropDir)\Il2CppSystem.dll" />
+    <Reference Include="Il2Cpp__Generated" HintPath="$(InteropDir)\__Generated.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(InteropDir)\UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.IMGUIModule" HintPath="$(InteropDir)\UnityEngine.IMGUIModule.dll" />
+    <Reference Include="UnityEngine.UI" HintPath="$(InteropDir)\UnityEngine.UI.dll" />
+    <Reference Include="UnityEngine.UIModule" HintPath="$(InteropDir)\UnityEngine.UIModule.dll" />
+    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(InteropDir)\UnityEngine.ImageConversionModule.dll" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(InteropDir)\UnityEngine.InputLegacyModule.dll" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(InteropDir)\UnityEngine.TextRenderingModule.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Resources\Textures\*.png" />
+  </ItemGroup>
+</Project>
