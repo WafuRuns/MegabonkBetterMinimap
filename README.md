@@ -32,6 +32,7 @@ A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap,
 -   Make a config file
 -   Fullscreen controllable map
 
-![Map icons](https://github.com/user-attachments/assets/4c347a44-8923-4659-acf1-e9e3c841a314)
-![Map](https://github.com/user-attachments/assets/2e797004-36e1-4c04-b7e9-6bf7079e0da5)
-![Minimap](https://github.com/user-attachments/assets/1824be05-ca1b-4aec-9c31-04ea44284df5)
+
+![Opened map](https://github.com/user-attachments/assets/552c3649-a2a6-43f6-a1d7-cff6f0a10b86)
+![Minimap](https://github.com/user-attachments/assets/db8de967-48f2-44cc-92e6-f5fd08b318d4)
+![Stats screen](https://github.com/user-attachments/assets/cdcb184d-07fc-4e62-9319-4203b1251202)
