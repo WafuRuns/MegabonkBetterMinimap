@@ -11,7 +11,10 @@ namespace MegabonkBetterMinimap
         {
             Assembly assembly = Assembly.GetExecutingAssembly();
 
-            using Stream stream = assembly.GetManifestResourceStream($"MegabonkBetterMinimap.Assets.Resources.Textures.{resourceName}.png");
+            using Stream stream = assembly.GetManifestResourceStream(
+                $"MegabonkBetterMinimap.Assets.Resources.Textures.{resourceName}.png"
+            );
+
             if (stream == null)
             {
                 Debug.LogError($"Embedded resource not found!");
@@ -28,7 +31,10 @@ namespace MegabonkBetterMinimap
 
                 fixed (byte* ptr = imageAsBytes)
                 {
-                    var managedSpanWrapper = new ManagedSpanWrapper(ptr, imageAsBytes.Length);
+                    ManagedSpanWrapper managedSpanWrapper = new ManagedSpanWrapper(
+                        ptr,
+                        imageAsBytes.Length
+                    );
                     ImageConversion.LoadImage_Injected(intPtr, ref managedSpanWrapper, false);
                 }
             }

@@ -4,16 +4,18 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Assets.Scripts.Camera;
 using Assets.Scripts.Inventory__Items__Pickups.Chests;
+using Assets.Scripts.Inventory__Items__Pickups.Interactables;
 using Assets.Scripts.Inventory__Items__Pickups.Items;
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using Il2CppInterop.Runtime.Injection;
 using UnityEngine;
 
 namespace MegabonkBetterMinimap;
 
-[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.1.0")]
+[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.2.0")]
 public class Plugin : BasePlugin
 {
     internal static new ManualLogSource Log;
@@ -32,7 +34,7 @@ public class Plugin : BasePlugin
         { EItemRarity.Common, new Color(0.225f, 1, 0, 1) },
         { EItemRarity.Rare, new Color(0, 0.317f, 0.965f, 1) },
         { EItemRarity.Epic, new Color(0.965f, 0, 0.691f, 1) },
-        { EItemRarity.Legendary, new Color(0.951f, 0.965f, 0, 1) }
+        { EItemRarity.Legendary, new Color(0.951f, 0.965f, 0, 1) },
     };
 
     [DllImport("user32.dll")]
@@ -45,13 +47,22 @@ public class Plugin : BasePlugin
         Harmony harmony = new("com.wafuruns.megabonkbetterminimap");
         harmony.PatchAll();
         Log.LogInfo("Loaded MegabonkBetterMinimap");
+
+        if (!ClassInjector.IsTypeRegisteredInIl2Cpp(typeof(StatsUI)))
+            ClassInjector.RegisterTypeInIl2Cpp<StatsUI>();
+
+        GameObject stats = new("StatsUI");
+        stats.AddComponent<StatsUI>();
+        UnityEngine.Object.DontDestroyOnLoad(stats);
     }
 
     [HarmonyPatch(typeof(MinimapUi), "Update")]
     public static class MinimapUi_Update_Patch
     {
         private static Vector3? originalLocalPosition = null;
-        private static Vector2 originalAnchorMin, originalAnchorMax, originalPivot;
+        private static Vector2 originalAnchorMin,
+            originalAnchorMax,
+            originalPivot;
 
         static void Postfix(MinimapUi __instance)
         {
@@ -93,6 +104,7 @@ public class Plugin : BasePlugin
 
                     rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
                     rect.localPosition = Vector3.zero;
+
                     __instance.border.gameObject.active = false;
                     __instance.UpdateScale(5f);
 
@@ -135,10 +147,20 @@ public class Plugin : BasePlugin
     public static class MinimapCamera_Update_Patch
     {
         private static Vector3? originalPosition = null;
-        private static readonly Quaternion CenterRotation = new(0.50000f, 0.50000f, -0.50000f, 0.50000f);
+        private static readonly Quaternion CenterRotation = Quaternion.Euler(90f, 0f, 0f);
         private static readonly Vector3 CenterPosition = new(0f, 1000f, 0f);
+
         static void Postfix(MinimapCamera __instance)
         {
+            RenderTexture texture = __instance.minimapCamera.targetTexture;
+            if (texture != null)
+            {
+                texture.Release();
+                texture.width = 1024;
+                texture.height = 1024;
+                texture.Create();
+            }
+
             if (_onMinimap == true)
             {
                 if (originalPosition == null)
@@ -146,7 +168,10 @@ public class Plugin : BasePlugin
                     originalPosition = __instance.minimapCamera.transform.position;
                 }
 
-                __instance.minimapCamera.transform.SetPositionAndRotation(CenterPosition, CenterRotation);
+                __instance.minimapCamera.transform.SetPositionAndRotation(
+                    CenterPosition,
+                    CenterRotation
+                );
 
                 if (__instance.minimapCamera.orthographicSize != _currentFullZoom)
                 {
@@ -195,10 +220,36 @@ public class Plugin : BasePlugin
     {
         static void Postfix(InteractableChest __instance)
         {
-            if (__instance.chestType == Assets.Scripts.Inventory__Items__Pickups.Interactables.EChest.Free)
+            // TODO: Chests from elites and challenges don't work?
+            EItemRarity rarity = __instance.chestType switch
+            {
+                EChest.Normal => EItemRarity.Common,
+                EChest.Corrupt => EItemRarity.Epic,
+                EChest.Free => EItemRarity.Legendary,
+                _ => EItemRarity.Common,
+            };
+            Statistics.AddInteractable(__instance.GetType().Name, rarity);
+
+            if (__instance.chestType == EChest.Free)
             {
                 ChangeMinimapIcon(__instance.icon, "ChestFree");
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractableChest), "OnDestroy")]
+    class InteractableChest_OnDestroy_Patch
+    {
+        static void Postfix(InteractableChest __instance)
+        {
+            EItemRarity rarity = __instance.chestType switch
+            {
+                EChest.Normal => EItemRarity.Common,
+                EChest.Corrupt => EItemRarity.Epic,
+                EChest.Free => EItemRarity.Legendary,
+                _ => EItemRarity.Common,
+            };
+            Statistics.RemoveInteractable(__instance.GetType().Name, rarity);
         }
     }
 
@@ -207,14 +258,35 @@ public class Plugin : BasePlugin
     {
         static void Postfix(ChargeShrine __instance)
         {
+            Statistics.AddInteractable(
+                __instance.GetType().Name,
+                __instance.isGolden ? EItemRarity.Legendary : EItemRarity.Common
+            );
+
             if (__instance.isGolden)
             {
-                ChangeMinimapIcon(__instance.minimapIcon.transform, "Shrine", EItemRarity.Legendary);
+                ChangeMinimapIcon(
+                    __instance.minimapIcon.transform,
+                    "Shrine",
+                    EItemRarity.Legendary
+                );
             }
             else
             {
                 ChangeMinimapIcon(__instance.minimapIcon.transform, "Shrine", EItemRarity.Common);
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(ChargeShrine), "Complete")]
+    class ChargeShrine_Complete_Patch
+    {
+        static void Postfix(ChargeShrine __instance)
+        {
+            Statistics.RemoveInteractable(
+                __instance.GetType().Name,
+                __instance.isGolden ? EItemRarity.Legendary : EItemRarity.Common
+            );
         }
     }
 
@@ -225,8 +297,18 @@ public class Plugin : BasePlugin
         {
             if (__instance.usesLeft > 0)
             {
+                Statistics.AddInteractable(__instance.GetType().Name, __instance.rarity);
                 ChangeMinimapIcon(__instance.minimapIcon.transform, "Microwave", __instance.rarity);
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractableMicrowave), "Explode")]
+    class InteractableMicrowave_Explode_Patch
+    {
+        static void Postfix(InteractableMicrowave __instance)
+        {
+            Statistics.RemoveInteractable(__instance.GetType().Name, __instance.rarity);
         }
     }
 
@@ -235,7 +317,21 @@ public class Plugin : BasePlugin
     {
         static void Postfix(InteractableShadyGuy __instance)
         {
-            ChangeMinimapIcon(__instance.hideAfterPurchase.First().transform, "ShadyGuy", __instance.rarity);
+            Statistics.AddInteractable(__instance.GetType().Name, __instance.rarity);
+            ChangeMinimapIcon(
+                __instance.hideAfterPurchase.First().transform,
+                "ShadyGuy",
+                __instance.rarity
+            );
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractableShadyGuy), "OnDestroy")]
+    class InteractableShadyGuy_OnDestroy_Patch
+    {
+        static void Postfix(InteractableShadyGuy __instance)
+        {
+            Statistics.RemoveInteractable(__instance.GetType().Name, __instance.rarity);
         }
     }
 
@@ -246,31 +342,45 @@ public class Plugin : BasePlugin
         {
             if (!__instance.done)
             {
+                Statistics.AddInteractable(__instance.GetType().Name, EItemRarity.Common);
                 ChangeMinimapIcon(__instance.minimapIcon.transform, "Challenge");
             }
         }
     }
 
+    [HarmonyPatch(typeof(InteractableShrineChallenge), "OnDestroy")]
+    class InteractableShrineChallenge_OnDestroy_Patch
+    {
+        static void Postfix(InteractableShrineChallenge __instance)
+        {
+            Statistics.RemoveInteractable(__instance.GetType().Name, EItemRarity.Common);
+        }
+    }
+
     [HarmonyPatch(typeof(BaseInteractable), "Start")]
-    public static class BaseInteractableStartPatch
+    public static class BaseInteractable_Start_Patch
     {
         static void Postfix(BaseInteractable __instance)
         {
             string typeName = __instance.GetIl2CppType().Name;
             if (typeName == "InteractableShrineCursed")
             {
-                InteractableShrineCursed shrine = __instance.GetComponent<InteractableShrineCursed>();
+                InteractableShrineCursed shrine =
+                    __instance.GetComponent<InteractableShrineCursed>();
                 if (shrine != null)
                 {
+                    Statistics.AddInteractable(shrine.GetType().Name, EItemRarity.Common);
                     ChangeMinimapIcon(shrine.minimapIcon.transform, "BossCurse");
                 }
                 return;
             }
             if (typeName == "InteractableShrineMagnet")
             {
-                InteractableShrineMagnet shrine = __instance.GetComponent<InteractableShrineMagnet>();
+                InteractableShrineMagnet shrine =
+                    __instance.GetComponent<InteractableShrineMagnet>();
                 if (shrine != null)
                 {
+                    Statistics.AddInteractable(shrine.GetType().Name, EItemRarity.Common);
                     ChangeMinimapIcon(shrine.minimapIcon.transform, "Magnet");
                 }
                 return;
@@ -280,10 +390,58 @@ public class Plugin : BasePlugin
                 InteractableShrineMoai shrine = __instance.GetComponent<InteractableShrineMoai>();
                 if (shrine != null)
                 {
+                    Statistics.AddInteractable(shrine.GetType().Name, EItemRarity.Common);
                     ChangeMinimapIcon(shrine.minimapIcon.transform, "Moai");
                 }
                 return;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(BaseInteractable), "OnDestroy")]
+    public static class BaseInteractable_OnDestroy_Patch
+    {
+        static void Postfix(BaseInteractable __instance)
+        {
+            string typeName = __instance.GetIl2CppType().Name;
+            if (typeName == "InteractableShrineCursed")
+            {
+                InteractableShrineCursed shrine =
+                    __instance.GetComponent<InteractableShrineCursed>();
+                if (shrine != null)
+                {
+                    Statistics.RemoveInteractable(shrine.GetType().Name, EItemRarity.Common);
+                }
+                return;
+            }
+            if (typeName == "InteractableShrineMagnet")
+            {
+                InteractableShrineMagnet shrine =
+                    __instance.GetComponent<InteractableShrineMagnet>();
+                if (shrine != null)
+                {
+                    Statistics.RemoveInteractable(shrine.GetType().Name, EItemRarity.Common);
+                }
+                return;
+            }
+            if (typeName == "InteractableShrineMoai")
+            {
+                InteractableShrineMoai shrine = __instance.GetComponent<InteractableShrineMoai>();
+                if (shrine != null)
+                {
+                    Statistics.RemoveInteractable(shrine.GetType().Name, EItemRarity.Common);
+                }
+                return;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(PauseHandler), "Start")]
+    public static class PauseHandler_Start_Patch
+    {
+        static void Postfix()
+        {
+            Statistics.ResetCounter();
         }
     }
 
@@ -299,19 +457,26 @@ public class Plugin : BasePlugin
         return true;
     }
 
-    public static void ChangeMinimapIcon(Transform icon, string iconName, EItemRarity? rarity = null)
+    public static void ChangeMinimapIcon(
+        Transform icon,
+        string iconName,
+        EItemRarity? rarity = null
+    )
     {
         MeshRenderer meshRenderer = icon.GetComponent<MeshRenderer>();
 
         if (meshRenderer == null)
             return;
 
+        meshRenderer.transform.localScale *= 1.3f;
+
         Texture2D tex = TextureManager.Load(iconName);
 
         if (tex != null)
         {
             meshRenderer.material.mainTexture = tex;
-            meshRenderer.material.color = rarity != null ? RarityColors[(EItemRarity)rarity] : Color.white;
+            meshRenderer.material.color =
+                rarity != null ? RarityColors[(EItemRarity)rarity] : Color.white;
         }
     }
 }
