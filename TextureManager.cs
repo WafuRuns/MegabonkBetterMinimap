@@ -20,7 +20,7 @@ namespace MegabonkBetterMinimap
             byte[] imageAsBytes = new byte[stream.Length];
             stream.Read(imageAsBytes, 0, imageAsBytes.Length);
 
-            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
+            Texture2D tex = new(2, 2, TextureFormat.RGBA32, false, false);
 
             unsafe
             {

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Assets.Scripts.Camera;
 using Assets.Scripts.Inventory__Items__Pickups.Chests;
+using Assets.Scripts.Inventory__Items__Pickups.Items;
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
@@ -10,7 +13,7 @@ using UnityEngine;
 
 namespace MegabonkBetterMinimap;
 
-[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.1.0")]
 public class Plugin : BasePlugin
 {
     internal static new ManualLogSource Log;
@@ -24,6 +27,13 @@ public class Plugin : BasePlugin
     private static bool _onMinimap = false;
     private static DateTime _lastKeyPressTime = DateTime.MinValue;
     private static readonly TimeSpan KeyCooldown = TimeSpan.FromMilliseconds(100);
+    private static readonly Dictionary<EItemRarity, Color> RarityColors = new()
+    {
+        { EItemRarity.Common, new Color(0.225f, 1, 0, 1) },
+        { EItemRarity.Rare, new Color(0, 0.317f, 0.965f, 1) },
+        { EItemRarity.Epic, new Color(0.965f, 0, 0.691f, 1) },
+        { EItemRarity.Legendary, new Color(0.951f, 0.965f, 0, 1) }
+    };
 
     [DllImport("user32.dll")]
     private static extern short GetAsyncKeyState(int vKey);
@@ -32,7 +42,7 @@ public class Plugin : BasePlugin
     {
         Log = base.Log;
 
-        Harmony harmony = new(MyPluginInfo.PLUGIN_GUID);
+        Harmony harmony = new("com.wafuruns.megabonkbetterminimap");
         harmony.PatchAll();
         Log.LogInfo("Loaded MegabonkBetterMinimap");
     }
@@ -86,7 +96,7 @@ public class Plugin : BasePlugin
                     __instance.border.gameObject.active = false;
                     __instance.UpdateScale(5f);
 
-                    var mapRenderer = __instance.transform.Find("MapRenderer");
+                    Transform mapRenderer = __instance.transform.Find("MapRenderer");
                     if (mapRenderer != null)
                     {
                         UnityEngine.UI.Mask mask = mapRenderer.GetComponent<UnityEngine.UI.Mask>();
@@ -192,31 +202,90 @@ public class Plugin : BasePlugin
         }
     }
 
-    // [HarmonyPatch(typeof(InteractableShadyGuy), "Start")]
-    // class InteractableShadyGuy_Start_Patch
-    // {
-    //     static void Postfix(InteractableShadyGuy __instance)
-    //     {
-    //         // We can get rarity to decided the minimap icon
-    //         // Can't get further to the minimap icon
-    //         // It just doesn't work the same as chests
+    [HarmonyPatch(typeof(ChargeShrine), "Start")]
+    class ChargeShrine_Start_Patch
+    {
+        static void Postfix(ChargeShrine __instance)
+        {
+            if (__instance.isGolden)
+            {
+                ChangeMinimapIcon(__instance.minimapIcon.transform, "Shrine", EItemRarity.Legendary);
+            }
+            else
+            {
+                ChangeMinimapIcon(__instance.minimapIcon.transform, "Shrine", EItemRarity.Common);
+            }
+        }
+    }
 
-    //         // Log.LogInfo(__instance.rarity);
-    //     }
-    // }
+    [HarmonyPatch(typeof(InteractableMicrowave), "Start")]
+    class InteractableMicrowave_Start_Patch
+    {
+        static void Postfix(InteractableMicrowave __instance)
+        {
+            if (__instance.usesLeft > 0)
+            {
+                ChangeMinimapIcon(__instance.minimapIcon.transform, "Microwave", __instance.rarity);
+            }
+        }
+    }
 
-    // [HarmonyPatch(typeof(BaseInteractable), "Start")]
-    // public static class BaseInteractableStartPatch
-    // {
-    //     static void Postfix(BaseInteractable __instance)
-    //     {
-    //         if (__instance.GetIl2CppType().Name == "InteractableShrineMoai")
-    //         {
-    //             // Theoretically every interactable could be found like this
-    //             // Can't get to the minimap icon
-    //         }
-    //     }
-    // }
+    [HarmonyPatch(typeof(InteractableShadyGuy), "Start")]
+    class InteractableShadyGuy_Start_Patch
+    {
+        static void Postfix(InteractableShadyGuy __instance)
+        {
+            ChangeMinimapIcon(__instance.hideAfterPurchase.First().transform, "ShadyGuy", __instance.rarity);
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractableShrineChallenge), "Awake")]
+    class InteractableShrineChallenge_Awake_Patch
+    {
+        static void Postfix(InteractableShrineChallenge __instance)
+        {
+            if (!__instance.done)
+            {
+                ChangeMinimapIcon(__instance.minimapIcon.transform, "Challenge");
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BaseInteractable), "Start")]
+    public static class BaseInteractableStartPatch
+    {
+        static void Postfix(BaseInteractable __instance)
+        {
+            string typeName = __instance.GetIl2CppType().Name;
+            if (typeName == "InteractableShrineCursed")
+            {
+                InteractableShrineCursed shrine = __instance.GetComponent<InteractableShrineCursed>();
+                if (shrine != null)
+                {
+                    ChangeMinimapIcon(shrine.minimapIcon.transform, "BossCurse");
+                }
+                return;
+            }
+            if (typeName == "InteractableShrineMagnet")
+            {
+                InteractableShrineMagnet shrine = __instance.GetComponent<InteractableShrineMagnet>();
+                if (shrine != null)
+                {
+                    ChangeMinimapIcon(shrine.minimapIcon.transform, "Magnet");
+                }
+                return;
+            }
+            if (typeName == "InteractableShrineMoai")
+            {
+                InteractableShrineMoai shrine = __instance.GetComponent<InteractableShrineMoai>();
+                if (shrine != null)
+                {
+                    ChangeMinimapIcon(shrine.minimapIcon.transform, "Moai");
+                }
+                return;
+            }
+        }
+    }
 
     public static bool IsKeyPressedOnce(int vKey)
     {
@@ -229,8 +298,8 @@ public class Plugin : BasePlugin
         _lastKeyPressTime = DateTime.Now;
         return true;
     }
-    
-    public static void ChangeMinimapIcon(Transform icon, string iconName)
+
+    public static void ChangeMinimapIcon(Transform icon, string iconName, EItemRarity? rarity = null)
     {
         MeshRenderer meshRenderer = icon.GetComponent<MeshRenderer>();
 
@@ -242,6 +311,7 @@ public class Plugin : BasePlugin
         if (tex != null)
         {
             meshRenderer.material.mainTexture = tex;
+            meshRenderer.material.color = rarity != null ? RarityColors[(EItemRarity)rarity] : Color.white;
         }
     }
 }
