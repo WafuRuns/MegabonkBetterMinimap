@@ -1,6 +1,6 @@
 # MegabonkBetterMinimap
 
-A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap, open the full map, etc.
+A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap, open the full map, adds new icons etc.
 
 **Definitely need help with some features in TODO, mod works well, but a lot of improvements are planned and it would be a shame to not finish this because of my lack of experience with modding Unity games.**
 
@@ -25,19 +25,16 @@ A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap,
 -   Changing the minimap zoom
 -   Provides full map
 -   Changes to map icons
-    -   Free chests (golden)
+    -   Everything important has a specific icon
+    -   Icons for Microwave and Shady Guy have rarity colors
 
 # TODO
 
 -   Make a config file
--   Change more map icons
-    -   Add icon for InteractableShrineMoai
-    -   Add icon for InteractableShadyGuy based on rarity
-    -   Add icon for InteractableShrineMagnet
-    -   Add icon for InteractableMicrowave
-
-    -   ... more icons
-    -   **Currently stuck here, only InteractableChest seemed to be easily modable, this is the first time I've touched BepInEx or Unity games in general, so I would love contributions**
+-   Counter of remaining pickups for each category
+-   Improve map resolution if possible
+-   Fullscreen controllable map
+-   Fix incorrect rotation
 
 ![32-1759753378-776589403](https://github.com/user-attachments/assets/2e797004-36e1-4c04-b7e9-6bf7079e0da5)
 ![32-1759753379-1265661135](https://github.com/user-attachments/assets/1824be05-ca1b-4aec-9c31-04ea44284df5)
