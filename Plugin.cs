@@ -7,6 +7,7 @@ using Assets.Scripts.Inventory__Items__Pickups.Chests;
 using Assets.Scripts.Inventory__Items__Pickups.Interactables;
 using Assets.Scripts.Inventory__Items__Pickups.Items;
 using Assets.Scripts.Inventory__Items__Pickups.Weapons.Projectiles;
+using Assets.Scripts.Managers;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -158,6 +159,18 @@ public class Plugin : BasePlugin
             if (KeyHelper.IsKeyPressedOnce(KeyCode.F3))
             {
                 _hideJunk = !_hideJunk;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(GameManager), "Update")]
+    class RestartRunPatch
+    {
+        static void Postfix()
+        {
+            if (KeyHelper.IsKeyPressedOnce(KeyCode.P))
+            {
+                MapController.RestartRun();
             }
         }
     }
