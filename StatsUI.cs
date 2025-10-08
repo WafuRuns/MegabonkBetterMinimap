@@ -13,18 +13,17 @@ namespace MegabonkBetterMinimap
         private Canvas _canvas;
         private RectTransform _panel;
         private VerticalLayoutGroup _layoutGroup;
-        private readonly Dictionary<string, GameObject> _statLines = new();
+        private readonly Dictionary<string, GameObject> _statLines = [];
         private static Font gameFont;
         private static Sprite borderSprite;
         private bool _initialized = false;
         private bool _visible = true;
-        private const int VK_T = 0x54;
 
         private void Update()
         {
             if (_initialized)
             {
-                if (Plugin.IsKeyPressedOnce(VK_T))
+                if (KeyHelper.IsKeyPressedOnce(KeyCode.T))
                 {
                     _visible = !_visible;
                     _canvas.gameObject.SetActive(_visible);

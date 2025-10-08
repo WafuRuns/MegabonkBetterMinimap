@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
+using Assets.Scripts.Actors.Enemies;
 using Assets.Scripts.Camera;
 using Assets.Scripts.Inventory__Items__Pickups.Chests;
 using Assets.Scripts.Inventory__Items__Pickups.Interactables;
 using Assets.Scripts.Inventory__Items__Pickups.Items;
+using Assets.Scripts.Inventory__Items__Pickups.Weapons.Projectiles;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
@@ -15,7 +17,7 @@ using UnityEngine;
 
 namespace MegabonkBetterMinimap;
 
-[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.2.0")]
+[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.3.0")]
 public class Plugin : BasePlugin
 {
     internal static new ManualLogSource Log;
@@ -27,8 +29,6 @@ public class Plugin : BasePlugin
     private const int ZoomIncrement = 5;
     private const int MaxZoom = 500;
     private static bool _onMinimap = false;
-    private static DateTime _lastKeyPressTime = DateTime.MinValue;
-    private static readonly TimeSpan KeyCooldown = TimeSpan.FromMilliseconds(100);
     private static readonly Dictionary<EItemRarity, Color> RarityColors = new()
     {
         { EItemRarity.Common, new Color(0.225f, 1, 0, 1) },
@@ -36,13 +36,27 @@ public class Plugin : BasePlugin
         { EItemRarity.Epic, new Color(0.965f, 0, 0.691f, 1) },
         { EItemRarity.Legendary, new Color(0.951f, 0.965f, 0, 1) },
     };
-
-    [DllImport("user32.dll")]
-    private static extern short GetAsyncKeyState(int vKey);
+    private static bool _hideJunk = false;
+    private static ConfigEntry<float> CurrentScaleConfig;
+    private static ConfigEntry<int> CurrentZoomConfig;
+    private static ConfigEntry<int> CurrentFullZoomConfig;
 
     public override void Load()
     {
         Log = base.Log;
+
+        CurrentScaleConfig = Config.Bind("Minimap", "CurrentScale", 1.0f, "Current minimap scale");
+        CurrentZoomConfig = Config.Bind("Minimap", "CurrentZoom", 100, "Current normal zoom");
+        CurrentFullZoomConfig = Config.Bind(
+            "Minimap",
+            "CurrentFullZoom",
+            300,
+            "Current full/minimap zoom"
+        );
+
+        _currentScale = CurrentScaleConfig.Value;
+        _currentZoom = CurrentZoomConfig.Value;
+        _currentFullZoom = CurrentFullZoomConfig.Value;
 
         Harmony harmony = new("com.wafuruns.megabonkbetterminimap");
         harmony.PatchAll();
@@ -56,6 +70,15 @@ public class Plugin : BasePlugin
         UnityEngine.Object.DontDestroyOnLoad(stats);
     }
 
+    [HarmonyPatch(typeof(MinimapUi), "Awake")]
+    public static class MinimapUi_Awake_Patch
+    {
+        static void Postfix(MinimapUi __instance)
+        {
+            __instance.UpdateScale(_currentScale);
+        }
+    }
+
     [HarmonyPatch(typeof(MinimapUi), "Update")]
     public static class MinimapUi_Update_Patch
     {
@@ -66,26 +89,17 @@ public class Plugin : BasePlugin
 
         static void Postfix(MinimapUi __instance)
         {
-            const int VK_F1 = 0x70;
-            const int VK_M = 0x4D;
-
-            if (IsKeyPressedOnce(VK_F1) && !_onMinimap)
+            if (KeyHelper.IsKeyPressedOnce(KeyCode.F1) && !_onMinimap)
             {
-                try
-                {
-                    _currentScale += ScaleIncrement;
-                    if (_currentScale > MaxScale)
-                        _currentScale = 1.0f;
+                _currentScale += ScaleIncrement;
+                if (_currentScale > MaxScale)
+                    _currentScale = 1.0f;
 
-                    __instance.UpdateScale(_currentScale);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogWarning($"Couldn't find MinimapUi instance! {ex}");
-                }
+                __instance.UpdateScale(_currentScale);
+                CurrentScaleConfig.Value = _currentScale;
             }
 
-            if (IsKeyPressedOnce(VK_M))
+            if (KeyHelper.IsKeyPressedOnce(KeyCode.M))
             {
                 Time.timeScale = Time.timeScale == 0 ? 1f : 0f;
                 RectTransform rect = __instance.GetComponent<RectTransform>();
@@ -140,6 +154,11 @@ public class Plugin : BasePlugin
                     _onMinimap = false;
                 }
             }
+
+            if (KeyHelper.IsKeyPressedOnce(KeyCode.F3))
+            {
+                _hideJunk = !_hideJunk;
+            }
         }
     }
 
@@ -192,9 +211,7 @@ public class Plugin : BasePlugin
                 }
             }
 
-            const int VK_F2 = 0x71;
-
-            if (IsKeyPressedOnce(VK_F2))
+            if (KeyHelper.IsKeyPressedOnce(KeyCode.F2))
             {
                 if (__instance?.minimapCamera == null)
                     return;
@@ -204,12 +221,14 @@ public class Plugin : BasePlugin
                     _currentFullZoom += ZoomIncrement;
                     if (_currentFullZoom > MaxZoom)
                         _currentFullZoom = 100;
+                    CurrentZoomConfig.Value = _currentZoom;
                 }
                 else
                 {
                     _currentZoom += ZoomIncrement;
                     if (_currentZoom > MaxZoom)
                         _currentZoom = 100;
+                    CurrentZoomConfig.Value = _currentZoom;
                 }
             }
         }
@@ -224,7 +243,6 @@ public class Plugin : BasePlugin
             EItemRarity rarity = __instance.chestType switch
             {
                 EChest.Normal => EItemRarity.Common,
-                EChest.Corrupt => EItemRarity.Epic,
                 EChest.Free => EItemRarity.Legendary,
                 _ => EItemRarity.Common,
             };
@@ -237,6 +255,24 @@ public class Plugin : BasePlugin
         }
     }
 
+    [HarmonyPatch(typeof(OpenChest), "Awake")]
+    class OpenChest_Awake_Patch
+    {
+        static void Postfix(OpenChest __instance)
+        {
+            Statistics.AddInteractable(typeof(InteractableChest).Name, EItemRarity.Epic);
+        }
+    }
+
+    [HarmonyPatch(typeof(OpenChest), "OnTriggerStay")]
+    class OpenChest_OnTriggerStay_Patch
+    {
+        static void Postfix(OpenChest __instance)
+        {
+            Statistics.RemoveInteractable(typeof(InteractableChest).Name, EItemRarity.Epic);
+        }
+    }
+
     [HarmonyPatch(typeof(InteractableChest), "OnDestroy")]
     class InteractableChest_OnDestroy_Patch
     {
@@ -245,7 +281,6 @@ public class Plugin : BasePlugin
             EItemRarity rarity = __instance.chestType switch
             {
                 EChest.Normal => EItemRarity.Common,
-                EChest.Corrupt => EItemRarity.Epic,
                 EChest.Free => EItemRarity.Legendary,
                 _ => EItemRarity.Common,
             };
@@ -445,18 +480,6 @@ public class Plugin : BasePlugin
         }
     }
 
-    public static bool IsKeyPressedOnce(int vKey)
-    {
-        if ((GetAsyncKeyState(vKey) & 0x8000) == 0)
-            return false;
-
-        if (DateTime.Now - _lastKeyPressTime < KeyCooldown)
-            return false;
-
-        _lastKeyPressTime = DateTime.Now;
-        return true;
-    }
-
     public static void ChangeMinimapIcon(
         Transform icon,
         string iconName,
@@ -477,6 +500,34 @@ public class Plugin : BasePlugin
             meshRenderer.material.mainTexture = tex;
             meshRenderer.material.color =
                 rarity != null ? RarityColors[(EItemRarity)rarity] : Color.white;
+        }
+    }
+
+    [HarmonyPatch(typeof(Enemy), "InitEnemy")]
+    public static class Enemy_InitEnemy_Patch
+    {
+        static void Postfix(Enemy __instance)
+        {
+            if (!_hideJunk)
+                return;
+            foreach (Renderer renderer in __instance.GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = false;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ProjectileBase), "Set")]
+    public static class ProjectileBase_Set_Patch
+    {
+        static void Postfix(ProjectileBase __instance)
+        {
+            if (!_hideJunk)
+                return;
+            foreach (Renderer renderer in __instance.GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = false;
+            }
         }
     }
 }

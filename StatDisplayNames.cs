@@ -25,7 +25,7 @@ namespace MegabonkBetterMinimap
                     typeof(InteractableChest).Name,
                     new Dictionary<EItemRarity, string>
                     {
-                        { EItemRarity.Epic, "Elite (WIP, not working)" },
+                        { EItemRarity.Epic, "Elite" },
                         { EItemRarity.Legendary, "Free" },
                     }
                 },

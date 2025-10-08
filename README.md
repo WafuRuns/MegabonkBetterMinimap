@@ -5,7 +5,7 @@ A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap,
 # Installation
 
 -   Install [BepInEx 6 Bleeding Edge IL2CPP](https://builds.bepinex.dev/projects/bepinex_be) for your game (tested on BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.738+af0cba7)
--   Download the [latest release of MegabonkBetterMinimap](https://github.com/WafuRuns/MegabonkBetterMinimap/releases/download/1.2.0/MegabonkBetterMinimap.dll)
+-   Download the [latest release of MegabonkBetterMinimap](https://github.com/WafuRuns/MegabonkBetterMinimap/releases/download/1.3.0/MegabonkBetterMinimap.dll)
 -   Paste MegabonkBetterMinimap.dll into Megabonk\BepInEx\plugins folder
 -   **I strongly recommend going into the game settings and setting "Upload score to Leaderboards" to Off.** This mod is an accessibility and comfort feature, not something to give you an unintended advantage in competition. Feel free to consult the game dev.
 
@@ -13,6 +13,7 @@ A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap,
 
 -   `F1`: Increases the minimap size
 -   `F2`: Zooms out the minimap
+-   `F3`: Hide particles and enemies (lag reduction for god runs)
 -   `M`: Opens/closes the full map
 -   `T`: Show remaining pickups screen
 
@@ -26,10 +27,33 @@ A BepInEx 6 mod for Megabonk that allows you to resize and zoom out the minimap,
     -   Icons for Microwave and Shady Guy have rarity colors
 -   Remaining pickups screen (including rarities)
 -   Improved map resolution
+-   Toggle for turning off enemy models and particles, helpful for infinite runs to reduce lag
+
+# Configuration
+
+Configuration is automatically saved based on your last settings, but you can also edit it manually.
+
+```toml
+[Minimap]
+
+## Current minimap scale
+# Setting type: Single
+# Default value: 1
+CurrentScale = 3.4999988
+
+## Current normal zoom
+# Setting type: Int32
+# Default value: 100
+CurrentZoom = 280
+
+## Current full/minimap zoom
+# Setting type: Int32
+# Default value: 300
+CurrentFullZoom = 300
+```
 
 # TODO
 
--   Make a config file
 -   Fullscreen controllable map
 
 
