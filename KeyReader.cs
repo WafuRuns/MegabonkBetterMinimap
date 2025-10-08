@@ -5,7 +5,7 @@ namespace MegabonkBetterMinimap
 {
     public static class KeyHelper
     {
-        public static TimeSpan KeyCooldown { get; set; } = TimeSpan.FromMilliseconds(200);
+        public static TimeSpan KeyCooldown { get; set; } = TimeSpan.FromMilliseconds(100);
         private static DateTime _lastKeyPressTime = DateTime.MinValue;
 
         public static bool IsKeyPressedOnce(KeyCode key)
