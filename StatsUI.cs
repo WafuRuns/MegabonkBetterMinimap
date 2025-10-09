@@ -93,7 +93,7 @@ namespace MegabonkBetterMinimap
             _panel.anchorMin = new Vector2(0f, 0f);
             _panel.anchorMax = new Vector2(0f, 0f);
             _panel.pivot = new Vector2(0f, 0f);
-            _panel.anchoredPosition = new Vector2(30f, 60f);
+            _panel.anchoredPosition = new Vector2(30f, 140f);
             _panel.sizeDelta = new Vector2(380f, 600f);
 
             _layoutGroup = panel.AddComponent<VerticalLayoutGroup>();
@@ -144,13 +144,13 @@ namespace MegabonkBetterMinimap
 
         public void UpdateUI()
         {
-            foreach (KeyValuePair<string, GameObject> kvp in _statLines)
+            foreach (var kvp in _statLines)
                 Destroy(kvp.Value);
-            _statLines.Clear();
 
-            foreach (
-                KeyValuePair<string, Dictionary<EItemRarity, int>> kvp in Statistics.GetCounters()
-            )
+            _statLines.Clear();
+            _statLines["rating"] = CreateLine($"Map Rating: {Statistics.GetRating()}", 0);
+
+            foreach (var kvp in Statistics.GetCounters())
             {
                 string typeName = kvp.Key;
                 Dictionary<EItemRarity, int> rarityDict = kvp.Value;
@@ -166,7 +166,7 @@ namespace MegabonkBetterMinimap
                 {
                     _statLines[typeName] = CreateLine(displayType, 0);
 
-                    foreach (KeyValuePair<EItemRarity, int> r in rarityDict)
+                    foreach (var r in rarityDict)
                     {
                         string content =
                             $"{StatDisplayNames.GetRarityName(typeName, r.Key)}: {r.Value}";
