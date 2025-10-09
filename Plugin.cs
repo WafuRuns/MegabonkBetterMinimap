@@ -19,7 +19,7 @@ using UnityEngine;
 
 namespace MegabonkBetterMinimap;
 
-[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.4.0")]
+[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.4.1")]
 public class Plugin : BasePlugin
 {
     internal static new ManualLogSource Log;
@@ -174,11 +174,6 @@ public class Plugin : BasePlugin
             if (KeyHelper.IsKeyPressedOnce(KeyCode.P))
             {
                 MapController.RestartRun();
-            }
-
-            if (KeyHelper.IsKeyPressedOnce(KeyCode.L))
-            {
-                MapController.LoadNextStage();
             }
         }
     }
