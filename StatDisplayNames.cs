@@ -23,31 +23,22 @@ namespace MegabonkBetterMinimap
             {
                 {
                     typeof(InteractableChest).Name,
-                    new Dictionary<EItemRarity, string>
-                    {
-                        { EItemRarity.Epic, "Elite" },
-                        { EItemRarity.Legendary, "Free" },
-                    }
+                    new() { { EItemRarity.Epic, "Elite" }, { EItemRarity.Legendary, "Free" } }
                 },
                 {
                     typeof(ChargeShrine).Name,
-                    new Dictionary<EItemRarity, string> { { EItemRarity.Legendary, "Golden" } }
+                    new() { { EItemRarity.Legendary, "Golden" } }
                 },
             };
 
         public static string GetInteractableName(string type) =>
-            Interactable.TryGetValue(type, out string name) ? name : type;
+            Interactable.TryGetValue(type, out var name) ? name : type;
 
         public static string GetRarityName(string interactableType, EItemRarity rarity)
         {
-            if (
-                RarityOverrides.TryGetValue(
-                    interactableType,
-                    out Dictionary<EItemRarity, string> overrides
-                )
-            )
+            if (RarityOverrides.TryGetValue(interactableType, out var overrides))
             {
-                if (overrides.TryGetValue(rarity, out string custom))
+                if (overrides.TryGetValue(rarity, out var custom))
                     return custom;
             }
 

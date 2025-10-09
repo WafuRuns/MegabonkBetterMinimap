@@ -31,10 +31,7 @@ namespace MegabonkBetterMinimap
 
                 fixed (byte* ptr = imageAsBytes)
                 {
-                    ManagedSpanWrapper managedSpanWrapper = new ManagedSpanWrapper(
-                        ptr,
-                        imageAsBytes.Length
-                    );
+                    ManagedSpanWrapper managedSpanWrapper = new(ptr, imageAsBytes.Length);
                     ImageConversion.LoadImage_Injected(intPtr, ref managedSpanWrapper, false);
                 }
             }

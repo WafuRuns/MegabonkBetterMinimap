@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.Actors;
 using Assets.Scripts.Actors.Enemies;
+using Assets.Scripts.Actors.Player;
 using Assets.Scripts.Camera;
 using Assets.Scripts.Inventory__Items__Pickups.Chests;
 using Assets.Scripts.Inventory__Items__Pickups.Interactables;
 using Assets.Scripts.Inventory__Items__Pickups.Items;
 using Assets.Scripts.Inventory__Items__Pickups.Weapons.Projectiles;
+using Assets.Scripts.Managers;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -17,7 +19,7 @@ using UnityEngine;
 
 namespace MegabonkBetterMinimap;
 
-[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.3.0")]
+[BepInPlugin("com.wafuruns.megabonkbetterminimap", "MegabonkBetterMinimap", "1.4.0")]
 public class Plugin : BasePlugin
 {
     internal static new ManualLogSource Log;
@@ -67,7 +69,7 @@ public class Plugin : BasePlugin
 
         GameObject stats = new("StatsUI");
         stats.AddComponent<StatsUI>();
-        UnityEngine.Object.DontDestroyOnLoad(stats);
+        Object.DontDestroyOnLoad(stats);
     }
 
     [HarmonyPatch(typeof(MinimapUi), "Awake")]
@@ -127,7 +129,9 @@ public class Plugin : BasePlugin
                     {
                         UnityEngine.UI.Mask mask = mapRenderer.GetComponent<UnityEngine.UI.Mask>();
                         if (mask != null)
+                        {
                             mask.enabled = false;
+                        }
                     }
                     _onMinimap = true;
                 }
@@ -158,6 +162,23 @@ public class Plugin : BasePlugin
             if (KeyHelper.IsKeyPressedOnce(KeyCode.F3))
             {
                 _hideJunk = !_hideJunk;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(GameManager), "Update")]
+    class GameManager_Update_Patch
+    {
+        static void Postfix()
+        {
+            if (KeyHelper.IsKeyPressedOnce(KeyCode.P))
+            {
+                MapController.RestartRun();
+            }
+
+            if (KeyHelper.IsKeyPressedOnce(KeyCode.L))
+            {
+                MapController.LoadNextStage();
             }
         }
     }
@@ -258,7 +279,7 @@ public class Plugin : BasePlugin
     [HarmonyPatch(typeof(OpenChest), "Awake")]
     class OpenChest_Awake_Patch
     {
-        static void Postfix(OpenChest __instance)
+        static void Postfix()
         {
             Statistics.AddInteractable(typeof(InteractableChest).Name, EItemRarity.Epic);
         }
@@ -267,7 +288,7 @@ public class Plugin : BasePlugin
     [HarmonyPatch(typeof(OpenChest), "OnTriggerStay")]
     class OpenChest_OnTriggerStay_Patch
     {
-        static void Postfix(OpenChest __instance)
+        static void Postfix()
         {
             Statistics.RemoveInteractable(typeof(InteractableChest).Name, EItemRarity.Epic);
         }
@@ -528,6 +549,98 @@ public class Plugin : BasePlugin
             {
                 renderer.enabled = false;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerInput), "Update")]
+    public static class PlayerInput_Update_Patch
+    {
+        private static bool lastCanInput = false;
+
+        static void Postfix(PlayerInput __instance)
+        {
+            bool currentCanInput = __instance.CanInput();
+            if (lastCanInput == false && lastCanInput != currentCanInput && Statistics.IsReset())
+            {
+                Statistics.ResetRunStats();
+            }
+            lastCanInput = currentCanInput;
+        }
+    }
+
+    [HarmonyPatch(typeof(Enemy), "EnemyDied")]
+    [HarmonyPatch([typeof(DamageContainer)])]
+    public static class Enemy_EnemyDied_Patch
+    {
+        static void Postfix()
+        {
+            Statistics.AddKill();
+        }
+    }
+
+    [HarmonyPatch(typeof(Enemy), "EnemyDied")]
+    [HarmonyPatch([])]
+    public static class Enemy_EnemyDied2_Patch
+    {
+        static void Postfix()
+        {
+            Statistics.AddKill();
+        }
+    }
+
+    [HarmonyPatch(typeof(MapController), "LoadNextStage")]
+    public static class MapController_LoadNextStage_Patch
+    {
+        static void Postfix()
+        {
+            AddRunStats();
+        }
+    }
+
+    [HarmonyPatch(typeof(MapController), "LoadFinalStage")]
+    public static class MapController_LoadFinalStage_Patch
+    {
+        static void Postfix()
+        {
+            AddRunStats();
+        }
+    }
+
+    [HarmonyPatch(typeof(MapController), "RestartRun")]
+    public static class MapController_RestartRun_Patch
+    {
+        static void Postfix()
+        {
+            Statistics.SetDefaultRunFlags();
+        }
+    }
+
+    [HarmonyPatch(typeof(MapController), "StartNewMap")]
+    public static class MapController_StartNewMap_Patch
+    {
+        static void Postfix()
+        {
+            Statistics.SetDefaultRunFlags();
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerRenderer), "OnDeath")]
+    public static class PlayerRenderer_OnDeath_Patch
+    {
+        static void Postfix()
+        {
+            AddRunStats();
+            Statistics.PrintStats();
+        }
+    }
+
+    private static void AddRunStats()
+    {
+        MyPlayer player = Object.FindAnyObjectByType<MyPlayer>();
+        if (player != null)
+        {
+            Statistics.AddRunStat(Statistics.GetKills());
+            Statistics.AddRunStat(player.inventory.playerXp.level);
         }
     }
 }
