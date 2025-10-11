@@ -86,8 +86,7 @@ public class Plugin : BasePlugin
             {
                 _currentScale += ScaleIncrement
                     * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
-                if (_currentScale > MaxScale)
-                    _currentScale = 1.0f;
+                _currentScale = Mathf.Clamp(_currentScale, 1, MaxScale);
 
                 __instance.UpdateScale(_currentScale);
                 ConfigManager.CurrentScale.Value = _currentScale;
@@ -228,16 +227,14 @@ public class Plugin : BasePlugin
                 {
                     _currentFullZoom += ConfigManager.ZoomStepping.Value
                         * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
-                    if (_currentFullZoom > MaxZoom)
-                        _currentFullZoom = 100;
+                    _currentFullZoom = Mathf.Clamp(_currentFullZoom, 100, MaxZoom);
                     ConfigManager.CurrentFullZoom.Value = _currentFullZoom;
                 }
                 else
                 {
                     _currentZoom += ConfigManager.ZoomStepping.Value
                         * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
-                    if (_currentZoom > MaxZoom)
-                        _currentZoom = 100;
+                    _currentZoom = Mathf.Clamp(_currentZoom, 100, MaxZoom);
                     ConfigManager.CurrentZoom.Value = _currentZoom;
                 }
             }
