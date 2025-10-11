@@ -77,7 +77,8 @@ public class Plugin : BasePlugin
 
         static void Postfix(MinimapUi __instance)
         {
-            if (KeyHelper.IsKeyPressedInterval(KeyCode.F1) && !_onMinimap)
+            if (KeyHelper.IsKeyPressedInterval(ConfigManager.ScaleMinimapHotkey.Value)
+                && !_onMinimap)
             {
                 _currentScale += ScaleIncrement;
                 if (_currentScale > MaxScale)
@@ -87,7 +88,7 @@ public class Plugin : BasePlugin
                 ConfigManager.CurrentScale.Value = _currentScale;
             }
 
-            if (Input.GetKeyDown(KeyCode.M))
+            if (Input.GetKeyDown(ConfigManager.ToggleFullMapHotkey.Value))
             {
                 Time.timeScale = Time.timeScale == 0 ? 1f : 0f;
                 RectTransform rect = __instance.GetComponent<RectTransform>();
@@ -145,7 +146,7 @@ public class Plugin : BasePlugin
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.F3))
+            if (Input.GetKeyDown(ConfigManager.HideProjectilesHotkey.Value))
             {
                 _hideJunk = !_hideJunk;
             }
@@ -157,7 +158,7 @@ public class Plugin : BasePlugin
     {
         static void Postfix()
         {
-            if (Input.GetKeyDown(KeyCode.P))
+            if (Input.GetKeyDown(ConfigManager.InstantResetHotkey.Value))
             {
                 MapController.RestartRun();
             }
@@ -213,7 +214,7 @@ public class Plugin : BasePlugin
                 }
             }
 
-            if (KeyHelper.IsKeyPressedInterval(KeyCode.F2))
+            if (KeyHelper.IsKeyPressedInterval(ConfigManager.ZoomMapHotkey.Value))
             {
                 if (__instance?.minimapCamera == null)
                     return;
