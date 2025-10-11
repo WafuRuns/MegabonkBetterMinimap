@@ -23,6 +23,7 @@ namespace MegabonkBetterMinimap;
 public class Plugin : BasePlugin
 {
     internal static new ManualLogSource Log;
+    internal static ConfigManager ConfigManager;
     private static float _currentScale = 1.0f;
     private const float ScaleIncrement = 0.10f;
     private const float MaxScale = 4.5f;
@@ -39,26 +40,16 @@ public class Plugin : BasePlugin
         { EItemRarity.Legendary, new Color(0.951f, 0.965f, 0, 1) },
     };
     private static bool _hideJunk = false;
-    private static ConfigEntry<float> CurrentScaleConfig;
-    private static ConfigEntry<int> CurrentZoomConfig;
-    private static ConfigEntry<int> CurrentFullZoomConfig;
 
     public override void Load()
     {
         Log = base.Log;
 
-        CurrentScaleConfig = Config.Bind("Minimap", "CurrentScale", 1.0f, "Current minimap scale");
-        CurrentZoomConfig = Config.Bind("Minimap", "CurrentZoom", 100, "Current normal zoom");
-        CurrentFullZoomConfig = Config.Bind(
-            "Minimap",
-            "CurrentFullZoom",
-            300,
-            "Current full/minimap zoom"
-        );
+        ConfigManager = new ConfigManager(Config);
 
-        _currentScale = CurrentScaleConfig.Value;
-        _currentZoom = CurrentZoomConfig.Value;
-        _currentFullZoom = CurrentFullZoomConfig.Value;
+        _currentScale = ConfigManager.CurrentScale.Value;
+        _currentZoom = ConfigManager.CurrentZoom.Value;
+        _currentFullZoom = ConfigManager.CurrentFullZoom.Value;
 
         Harmony harmony = new("com.wafuruns.megabonkbetterminimap");
         harmony.PatchAll();
@@ -98,7 +89,7 @@ public class Plugin : BasePlugin
                     _currentScale = 1.0f;
 
                 __instance.UpdateScale(_currentScale);
-                CurrentScaleConfig.Value = _currentScale;
+                ConfigManager.CurrentScale.Value = _currentScale;
             }
 
             if (Input.GetKeyDown(KeyCode.M))
@@ -237,14 +228,14 @@ public class Plugin : BasePlugin
                     _currentFullZoom += ZoomIncrement;
                     if (_currentFullZoom > MaxZoom)
                         _currentFullZoom = 100;
-                    CurrentZoomConfig.Value = _currentZoom;
+                    ConfigManager.CurrentZoom.Value = _currentZoom;
                 }
                 else
                 {
                     _currentZoom += ZoomIncrement;
                     if (_currentZoom > MaxZoom)
                         _currentZoom = 100;
-                    CurrentZoomConfig.Value = _currentZoom;
+                    ConfigManager.CurrentZoom.Value = _currentZoom;
                 }
             }
         }
