@@ -23,7 +23,7 @@ namespace MegabonkBetterMinimap
         {
             if (_initialized)
             {
-                if (KeyHelper.IsKeyPressedOnce(KeyCode.T))
+                if (Input.GetKeyDown(ConfigManager.ToggleStatsHotkey.Value))
                 {
                     _visible = !_visible;
                     _canvas.gameObject.SetActive(_visible);

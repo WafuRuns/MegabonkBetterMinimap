@@ -23,12 +23,12 @@ namespace MegabonkBetterMinimap;
 public class Plugin : BasePlugin
 {
     internal static new ManualLogSource Log;
+    internal static ConfigManager ConfigManager;
     private static float _currentScale = 1.0f;
     private const float ScaleIncrement = 0.10f;
     private const float MaxScale = 4.5f;
     private static int _currentZoom = 100;
     private static int _currentFullZoom = 300;
-    private const int ZoomIncrement = 5;
     private const int MaxZoom = 500;
     private static bool _onMinimap = false;
     private static readonly Dictionary<EItemRarity, Color> RarityColors = new()
@@ -39,26 +39,16 @@ public class Plugin : BasePlugin
         { EItemRarity.Legendary, new Color(0.951f, 0.965f, 0, 1) },
     };
     private static bool _hideJunk = false;
-    private static ConfigEntry<float> CurrentScaleConfig;
-    private static ConfigEntry<int> CurrentZoomConfig;
-    private static ConfigEntry<int> CurrentFullZoomConfig;
 
     public override void Load()
     {
         Log = base.Log;
 
-        CurrentScaleConfig = Config.Bind("Minimap", "CurrentScale", 1.0f, "Current minimap scale");
-        CurrentZoomConfig = Config.Bind("Minimap", "CurrentZoom", 100, "Current normal zoom");
-        CurrentFullZoomConfig = Config.Bind(
-            "Minimap",
-            "CurrentFullZoom",
-            300,
-            "Current full/minimap zoom"
-        );
+        ConfigManager = new ConfigManager(Config);
 
-        _currentScale = CurrentScaleConfig.Value;
-        _currentZoom = CurrentZoomConfig.Value;
-        _currentFullZoom = CurrentFullZoomConfig.Value;
+        _currentScale = ConfigManager.CurrentScale.Value;
+        _currentZoom = ConfigManager.CurrentZoom.Value;
+        _currentFullZoom = ConfigManager.CurrentFullZoom.Value;
 
         Harmony harmony = new("com.wafuruns.megabonkbetterminimap");
         harmony.PatchAll();
@@ -91,17 +81,18 @@ public class Plugin : BasePlugin
 
         static void Postfix(MinimapUi __instance)
         {
-            if (KeyHelper.IsKeyPressedOnce(KeyCode.F1) && !_onMinimap)
+            if (KeyHelper.IsKeyPressedInterval(ConfigManager.ScaleMinimapHotkey.Value)
+                && !_onMinimap)
             {
-                _currentScale += ScaleIncrement;
-                if (_currentScale > MaxScale)
-                    _currentScale = 1.0f;
+                _currentScale += ScaleIncrement
+                    * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
+                _currentScale = Mathf.Clamp(_currentScale, 1, MaxScale);
 
                 __instance.UpdateScale(_currentScale);
-                CurrentScaleConfig.Value = _currentScale;
+                ConfigManager.CurrentScale.Value = _currentScale;
             }
 
-            if (KeyHelper.IsKeyPressedOnce(KeyCode.M))
+            if (Input.GetKeyDown(ConfigManager.ToggleFullMapHotkey.Value))
             {
                 Time.timeScale = Time.timeScale == 0 ? 1f : 0f;
                 RectTransform rect = __instance.GetComponent<RectTransform>();
@@ -159,7 +150,7 @@ public class Plugin : BasePlugin
                 }
             }
 
-            if (KeyHelper.IsKeyPressedOnce(KeyCode.F3))
+            if (Input.GetKeyDown(ConfigManager.HideProjectilesHotkey.Value))
             {
                 _hideJunk = !_hideJunk;
             }
@@ -171,7 +162,7 @@ public class Plugin : BasePlugin
     {
         static void Postfix()
         {
-            if (KeyHelper.IsKeyPressedOnce(KeyCode.P))
+            if (Input.GetKeyDown(ConfigManager.InstantResetHotkey.Value))
             {
                 MapController.RestartRun();
             }
@@ -227,24 +218,24 @@ public class Plugin : BasePlugin
                 }
             }
 
-            if (KeyHelper.IsKeyPressedOnce(KeyCode.F2))
+            if (KeyHelper.IsKeyPressedInterval(ConfigManager.ZoomMapHotkey.Value))
             {
                 if (__instance?.minimapCamera == null)
                     return;
 
                 if (_onMinimap)
                 {
-                    _currentFullZoom += ZoomIncrement;
-                    if (_currentFullZoom > MaxZoom)
-                        _currentFullZoom = 100;
-                    CurrentZoomConfig.Value = _currentZoom;
+                    _currentFullZoom += ConfigManager.ZoomStepping.Value
+                        * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
+                    _currentFullZoom = Mathf.Clamp(_currentFullZoom, 100, MaxZoom);
+                    ConfigManager.CurrentFullZoom.Value = _currentFullZoom;
                 }
                 else
                 {
-                    _currentZoom += ZoomIncrement;
-                    if (_currentZoom > MaxZoom)
-                        _currentZoom = 100;
-                    CurrentZoomConfig.Value = _currentZoom;
+                    _currentZoom += ConfigManager.ZoomStepping.Value
+                        * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
+                    _currentZoom = Mathf.Clamp(_currentZoom, 100, MaxZoom);
+                    ConfigManager.CurrentZoom.Value = _currentZoom;
                 }
             }
         }
@@ -493,6 +484,10 @@ public class Plugin : BasePlugin
         static void Postfix()
         {
             Statistics.ResetCounter();
+            ConfigManager.Refresh();
+            _currentScale = ConfigManager.CurrentScale.Value;
+            _currentZoom = ConfigManager.CurrentZoom.Value;
+            _currentFullZoom = ConfigManager.CurrentFullZoom.Value;
         }
     }
 
