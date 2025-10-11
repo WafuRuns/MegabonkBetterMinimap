@@ -1,15 +1,12 @@
-using System;
+﻿using System;
 using UnityEngine;
 
-namespace MegabonkBetterMinimap
-{
-    public static class KeyHelper
-    {
+namespace MegabonkBetterMinimap {
+    public static class KeyHelper {
         public static TimeSpan KeyCooldown { get; set; } = TimeSpan.FromMilliseconds(100);
         private static DateTime _lastKeyPressTime = DateTime.MinValue;
 
-        public static bool IsKeyPressedOnce(KeyCode key)
-        {
+        public static bool IsKeyPressedInterval(KeyCode key) {
             if (!Input.GetKey(key))
                 return false;
 
