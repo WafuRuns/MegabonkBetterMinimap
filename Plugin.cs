@@ -91,7 +91,7 @@ public class Plugin : BasePlugin
 
         static void Postfix(MinimapUi __instance)
         {
-            if (Input.GetKeyDown(KeyCode.F1) && !_onMinimap)
+            if (KeyHelper.IsKeyPressedInterval(KeyCode.F1) && !_onMinimap)
             {
                 _currentScale += ScaleIncrement;
                 if (_currentScale > MaxScale)
@@ -227,7 +227,7 @@ public class Plugin : BasePlugin
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.F2))
+            if (KeyHelper.IsKeyPressedInterval(KeyCode.F2))
             {
                 if (__instance?.minimapCamera == null)
                     return;
