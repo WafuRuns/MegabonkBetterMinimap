@@ -29,7 +29,7 @@ public class Plugin : BasePlugin
     private static int _currentZoom = 100;
     private static int _currentFullZoom = 300;
     private const int ZoomIncrement = 5;
-    private const int MaxZoom = 500;
+    private const int MaxZoom = 600;
     private static bool _onMinimap = false;
     private static readonly Dictionary<EItemRarity, Color> RarityColors = new()
     {
@@ -38,6 +38,16 @@ public class Plugin : BasePlugin
         { EItemRarity.Epic, new Color(0.965f, 0, 0.691f, 1) },
         { EItemRarity.Legendary, new Color(0.951f, 0.965f, 0, 1) },
     };
+    private static readonly Dictionary<string, int> defaultFullZoomByStageName = new() {
+        { "Green Forest", 300 },
+        { "Deep Forest", 325 },
+        { "Cursed Forest", 350 },
+        { "Dusty Desert", 475 },
+        { "Twilight Desert", 525 },
+        { "Scorched Desert", 575 }
+    };
+        
+
     private static bool _hideJunk = false;
     private static ConfigEntry<float> CurrentScaleConfig;
     private static ConfigEntry<int> CurrentZoomConfig;
@@ -493,6 +503,10 @@ public class Plugin : BasePlugin
         static void Postfix()
         {
             Statistics.ResetCounter();
+            var stageName = MapController.currentStage.stageName;
+            if (defaultFullZoomByStageName.TryGetValue(stageName, out int zoomValue)) {
+                _currentFullZoom = zoomValue;
+            }
         }
     }
 
