@@ -224,7 +224,7 @@ public class Plugin : BasePlugin
                     _currentFullZoom += ZoomIncrement;
                     if (_currentFullZoom > MaxZoom)
                         _currentFullZoom = 100;
-                    ConfigManager.CurrentZoom.Value = _currentZoom;
+                    ConfigManager.CurrentFullZoom.Value = _currentFullZoom;
                 }
                 else
                 {
