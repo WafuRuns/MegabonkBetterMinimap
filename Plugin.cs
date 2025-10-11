@@ -46,6 +46,10 @@ public class Plugin : BasePlugin
 
         ConfigManager = new ConfigManager(Config);
 
+        _currentScale = ConfigManager.CurrentScale.Value;
+        _currentZoom = ConfigManager.CurrentZoom.Value;
+        _currentFullZoom = ConfigManager.CurrentFullZoom.Value;
+
         Harmony harmony = new("com.wafuruns.megabonkbetterminimap");
         harmony.PatchAll();
         Log.LogInfo("Loaded MegabonkBetterMinimap");
