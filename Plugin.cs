@@ -29,7 +29,6 @@ public class Plugin : BasePlugin
     private const float MaxScale = 4.5f;
     private static int _currentZoom = 100;
     private static int _currentFullZoom = 300;
-    private const int ZoomIncrement = 5;
     private const int MaxZoom = 500;
     private static bool _onMinimap = false;
     private static readonly Dictionary<EItemRarity, Color> RarityColors = new()
@@ -221,14 +220,14 @@ public class Plugin : BasePlugin
 
                 if (_onMinimap)
                 {
-                    _currentFullZoom += ZoomIncrement;
+                    _currentFullZoom += ConfigManager.ZoomStepping.Value;
                     if (_currentFullZoom > MaxZoom)
                         _currentFullZoom = 100;
                     ConfigManager.CurrentFullZoom.Value = _currentFullZoom;
                 }
                 else
                 {
-                    _currentZoom += ZoomIncrement;
+                    _currentZoom += ConfigManager.ZoomStepping.Value;
                     if (_currentZoom > MaxZoom)
                         _currentZoom = 100;
                     ConfigManager.CurrentZoom.Value = _currentZoom;

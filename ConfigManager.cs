@@ -9,6 +9,7 @@ namespace MegabonkBetterMinimap {
         internal static ConfigEntry<float> CurrentScale { get; set; }
         internal static ConfigEntry<int> CurrentZoom { get; set; }
         internal static ConfigEntry<int> CurrentFullZoom { get; set; }
+        internal static ConfigEntry<int> ZoomStepping { get; private set; }
         internal static ConfigEntry<KeyCode> ScaleMinimapHotkey { get; private set; }
         internal static ConfigEntry<KeyCode> ZoomMapHotkey { get; private set; }
         internal static ConfigEntry<KeyCode> ToggleFullMapHotkey { get; private set; }
@@ -23,6 +24,8 @@ namespace MegabonkBetterMinimap {
             CurrentScale = Cfg.Bind("Minimap", "CurrentScale", 1.0f, "Current minimap scale.\nThis value is updated automatically when changed in game.");
             CurrentZoom = Cfg.Bind("Minimap", "CurrentZoom", 100, "Current normal zoom\nThis value is updated automatically when changed in game.");
             CurrentFullZoom = Cfg.Bind("Minimap", "CurrentFullZoom", 300, "Current full/minimap zoom\nThis value is updated automatically when changed in game.");
+            ZoomStepping = Cfg.Bind("Minimap", "Zoom Stepping", 5, new ConfigDescription("Adjust the increment when zooming the map." +
+                "\nHigher values change zoom faster.", new AcceptableValueRange<int>(5, 25)));
 
             ToggleFullMapHotkey = Cfg.Bind("Hotkeys", "Toggle full map", KeyCode.M, "Press this key to open the full map view. While the full map is opened, the game is paused.");
             ScaleMinimapHotkey = Cfg.Bind("Hotkeys", "Minimap scale", KeyCode.F1, "Press this key to change the scale of the minimap in the top right corner of the screen.");
