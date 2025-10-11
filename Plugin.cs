@@ -80,7 +80,8 @@ public class Plugin : BasePlugin
             if (KeyHelper.IsKeyPressedInterval(ConfigManager.ScaleMinimapHotkey.Value)
                 && !_onMinimap)
             {
-                _currentScale += ScaleIncrement;
+                _currentScale += ScaleIncrement
+                    * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
                 if (_currentScale > MaxScale)
                     _currentScale = 1.0f;
 
@@ -221,14 +222,16 @@ public class Plugin : BasePlugin
 
                 if (_onMinimap)
                 {
-                    _currentFullZoom += ConfigManager.ZoomStepping.Value;
+                    _currentFullZoom += ConfigManager.ZoomStepping.Value
+                        * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
                     if (_currentFullZoom > MaxZoom)
                         _currentFullZoom = 100;
                     ConfigManager.CurrentFullZoom.Value = _currentFullZoom;
                 }
                 else
                 {
-                    _currentZoom += ConfigManager.ZoomStepping.Value;
+                    _currentZoom += ConfigManager.ZoomStepping.Value
+                        * (Input.GetKey(KeyCode.LeftShift) ? -1 : 1);
                     if (_currentZoom > MaxZoom)
                         _currentZoom = 100;
                     ConfigManager.CurrentZoom.Value = _currentZoom;

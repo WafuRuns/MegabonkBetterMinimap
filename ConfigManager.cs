@@ -28,8 +28,8 @@ namespace MegabonkBetterMinimap {
                 "\nHigher values change zoom faster.", new AcceptableValueRange<int>(5, 25)));
 
             ToggleFullMapHotkey = Cfg.Bind("Hotkeys", "Toggle full map", KeyCode.M, "Press this key to open the full map view. While the full map is opened, the game is paused.");
-            ScaleMinimapHotkey = Cfg.Bind("Hotkeys", "Minimap scale", KeyCode.F1, "Press this key to change the scale of the minimap in the top right corner of the screen.");
-            ZoomMapHotkey = Cfg.Bind("Hotkeys", "Map zoom", KeyCode.F2, "Press this key to zoom out the map itself both in minimap and full map view.");
+            ScaleMinimapHotkey = Cfg.Bind("Hotkeys", "Minimap scale", KeyCode.F1, "Press this key to scale up the minimap in the top right corner of the screen.\nHold shift to scale down.");
+            ZoomMapHotkey = Cfg.Bind("Hotkeys", "Map zoom", KeyCode.F2, "Press this key to zoom out the map itself both in minimap and full map view.\nHold shift to zoom in.");
             ToggleStatsHotkey = Cfg.Bind("Hotkeys", "Toggle stats", KeyCode.T, "Press this key toggle the statistics panel.");
             HideProjectilesHotkey = Cfg.Bind("Hotkeys", "Hide projectiles", KeyCode.F3, "Press this key to hide projectiles and effects. Useful in god runs.");
             InstantResetHotkey = Cfg.Bind("Hotkeys", "Instant reset", KeyCode.P, "Press this key to instantly reset the run.");
