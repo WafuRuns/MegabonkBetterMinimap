@@ -41,7 +41,7 @@ public class Plugin : BasePlugin
     private static readonly Dictionary<string, int> defaultFullZoomByStageName = new() {
         { "Green Forest", 300 },
         { "Deep Forest", 325 },
-        { "Cursed Forest", 375 },
+        { "Red Forest", 375 },
         { "Dusty Desert", 475 },
         { "Twilight Desert", 525 },
         { "Scorched Desert", 575 }
